@@ -1,7 +1,9 @@
 package examplemod;
 
+import basemod.AutoAdd;
 import basemod.BaseMod;
 import basemod.interfaces.*;
+import examplemod.cards.BaseCard;
 import examplemod.util.GeneralUtils;
 import examplemod.util.KeywordInfo;
 import examplemod.util.TextureLoader;
@@ -25,7 +27,8 @@ import java.util.Optional;
 import java.util.Set;
 
 @SpireInitializer
-public class BasicMod implements
+public class NotBasicMod implements
+        EditCardsSubscriber,
         EditStringsSubscriber,
         EditKeywordsSubscriber,
         PostInitializeSubscriber {
@@ -43,16 +46,17 @@ public class BasicMod implements
 
     //This will be called by ModTheSpire because of the @SpireInitializer annotation at the top of the class.
     public static void initialize() {
-        new BasicMod();
+        new NotBasicMod();
     }
 
-    public BasicMod() {
+    public NotBasicMod() {
         BaseMod.subscribe(this); //This will make BaseMod trigger all the subscribers at their appropriate times.
         logger.info(modID + " subscribed to BaseMod.");
     }
 
     @Override
     public void receivePostInitialize() {
+
         //This loads the image used as an icon in the in-game mods menu.
         Texture badgeTexture = TextureLoader.getTexture(resourcePath("badge.png"));
         //Set up the mod information displayed in the in-game mods menu.
@@ -160,7 +164,7 @@ public class BasicMod implements
             if (annotationDB == null)
                 return false;
             Set<String> initializers = annotationDB.getAnnotationIndex().getOrDefault(SpireInitializer.class.getName(), Collections.emptySet());
-            return initializers.contains(BasicMod.class.getName());
+            return initializers.contains(NotBasicMod.class.getName());
         }).findFirst();
         if (infos.isPresent()) {
             info = infos.get();
@@ -169,5 +173,13 @@ public class BasicMod implements
         else {
             throw new RuntimeException("Failed to determine mod info/ID based on initializer.");
         }
+    }
+
+    @Override
+    public void receiveEditCards() {
+        new AutoAdd(modID) //Loads files from this mod
+                .packageFilter(BaseCard.class) //In the same package as this class
+                .setDefaultSeen(true) //And marks them as seen in the compendium
+                .cards(); //Adds the cards
     }
 }

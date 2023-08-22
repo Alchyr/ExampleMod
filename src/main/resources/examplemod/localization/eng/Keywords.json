@@ -19,5 +19,12 @@
       "multiword_keywords"
     ],
     "DESCRIPTION": "Make sure the first element in the NAMES is the same as your PROPER_NAME. The rest should use _ to replace spaces. In card text, you'll use the underscore versions."
+  },
+  {
+    "PROPER_NAME": "Keyword",
+    "NAMES": [
+      "keyword"
+    ],
+    "DESCRIPTION": "a"
   }
 ]

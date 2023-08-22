@@ -1,15 +1,14 @@
 {
-  "${modID}:ExampleCard": {
-    "NAME": "Name",
-    "DESCRIPTION": "Description.",
-    "EXTENDED_DESCRIPTION": [
-      "You can put more text in here.",
-      "If you need to use it for stuff.",
-      "Blizzard is a good example for this."
-    ]
-  },
   "${modID}:InfiniteUpgradeAttack": {
     "NAME": "Not Searing Blow",
-    "DESCRIPTION": "Deal !D! damage."
+    "DESCRIPTION": "Deal !D! damage. NL _ _ _ NL !${modID}:Keyword! NL ${modID}:Multiword_Keywords NL Deal !D! damage X+!M! times."
+  },
+  "${modID}:MultiVarCard": {
+    "NAME": "Many Variables",
+    "DESCRIPTION": "Deal !D! damage. NL Deal !${modID}:D2! damage. NL Deal !${modID}:D3! damage. NL Gain !B! Block. NL Gain !${modID}:B2! Block."
+  },
+  "${modID}:ExampleCard": {
+    "NAME": "Why Byrd",
+    "DESCRIPTION": "Deal !D! damage. NL Enemy loses !${modID}:beep! HP. Byrds lose twice as much."
   }
 }
