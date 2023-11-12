@@ -3,13 +3,17 @@ package examplemod.cards;
 import basemod.BaseMod;
 import basemod.abstracts.CustomCard;
 import basemod.abstracts.DynamicVariable;
+import com.badlogic.gdx.graphics.Color;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
+import com.megacrit.cardcrawl.core.Settings;
+import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.localization.CardStrings;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import examplemod.NotBasicMod;
 import examplemod.util.CardStats;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -29,11 +33,12 @@ public abstract class BaseCard extends CustomCard {
     protected int baseCost;
 
     protected boolean upgradeCost;
+    protected int costUpgrade;
+
     protected boolean upgradeDamage;
     protected boolean upgradeBlock;
     protected boolean upgradeMagic;
 
-    protected int costUpgrade;
     protected int damageUpgrade;
     protected int blockUpgrade;
     protected int magicUpgrade;
@@ -130,17 +135,146 @@ public abstract class BaseCard extends CustomCard {
         }
     }
 
+
+
     protected final void setCustomVar(String key, int base) {
         this.setCustomVar(key, base, 0);
     }
     protected final void setCustomVar(String key, int base, int upgrade) {
+        setCustomVarValue(key, base, upgrade);
+
         if (!customVars.containsKey(key)) {
             QuickDynamicVariable var = new QuickDynamicVariable(key);
             customVars.put(key, var);
             BaseMod.addDynamicVariable(var);
+            initializeDescription();
         }
-        cardVariables.put(key, new LocalVarInfo(base, upgrade));
     }
+
+    protected enum VariableType {
+        DAMAGE,
+        BLOCK,
+        MAGIC
+    }
+    protected final void setCustomVar(String key, VariableType type, int base) {
+        setCustomVar(key, type, base, 0);
+    }
+    protected final void setCustomVar(String key, VariableType type, int base, int upgrade) {
+        setCustomVarValue(key, base, upgrade);
+
+        switch (type) {
+            case DAMAGE:
+                calculateVarAsDamage(key);
+                break;
+            case BLOCK:
+                calculateVarAsBlock(key);
+                break;
+        }
+
+        if (!customVars.containsKey(key)) {
+            QuickDynamicVariable var = new QuickDynamicVariable(key);
+            customVars.put(key, var);
+            BaseMod.addDynamicVariable(var);
+            initializeDescription();
+        }
+    }
+    protected final void setCustomVar(String key, VariableType type, int base, BiFunction<AbstractMonster, Integer, Integer> preCalc) {
+        setCustomVar(key, type, base, 0, preCalc);
+    }
+    protected final void setCustomVar(String key, VariableType type, int base, int upgrade, BiFunction<AbstractMonster, Integer, Integer> preCalc) {
+        setCustomVar(key, type, base, upgrade, preCalc, (m, val)->val);
+    }
+    protected final void setCustomVar(String key, VariableType type, int base, BiFunction<AbstractMonster, Integer, Integer> preCalc, BiFunction<AbstractMonster, Integer, Integer> postCalc) {
+        setCustomVar(key, type, base, 0, preCalc, postCalc);
+    }
+    protected final void setCustomVar(String key, VariableType type, int base, int upgrade, BiFunction<AbstractMonster, Integer, Integer> preCalc, BiFunction<AbstractMonster, Integer, Integer> postCalc) {
+        setCustomVarValue(key, base, upgrade);
+
+        switch (type) {
+            case DAMAGE:
+                setVarCalculation(key, (m, baseVal) -> {
+                    boolean wasMultiDamage = this.isMultiDamage;
+                    this.isMultiDamage = false;
+
+                    int tmp = this.baseDamage;
+
+                    this.baseDamage = baseVal;
+
+                    this.baseDamage = preCalc.apply(m, this.baseDamage);
+
+                    if (m != null)
+                        super.calculateCardDamage(m);
+                    else
+                        super.applyPowers();
+
+                    this.damage = postCalc.apply(m, this.damage);
+
+                    this.baseDamage = tmp;
+                    this.isMultiDamage = wasMultiDamage;
+
+                    return damage;
+                });
+                break;
+            case BLOCK:
+                setVarCalculation(key, (m, baseVal)->{
+                    int tmp = this.baseBlock;
+
+                    this.baseBlock = baseVal;
+
+                    this.baseBlock = preCalc.apply(m, this.baseBlock);
+
+                    if (m != null)
+                        super.calculateCardDamage(m);
+                    else
+                        super.applyPowers();
+
+                    this.block = postCalc.apply(m, this.block);
+
+                    this.baseBlock = tmp;
+                    return block;
+                });
+                break;
+        }
+
+        if (!customVars.containsKey(key)) {
+            QuickDynamicVariable var = new QuickDynamicVariable(key);
+            customVars.put(key, var);
+            BaseMod.addDynamicVariable(var);
+            initializeDescription();
+        }
+    }
+
+    private void setCustomVarValue(String key, int base, int upg) {
+        cardVariables.compute(key, (k, old)->{
+            if (old == null) {
+                return new LocalVarInfo(base, upg);
+            }
+            else {
+                old.base = base;
+                old.upgrade = upg;
+                return old;
+            }
+        });
+    }
+
+    protected final void colorCustomVar(String key, Color normalColor) {
+        colorCustomVar(key, normalColor, Settings.GREEN_TEXT_COLOR, Settings.RED_TEXT_COLOR, Settings.GREEN_TEXT_COLOR);
+    }
+    protected final void colorCustomVar(String key, Color normalColor, Color increasedColor, Color decreasedColor) {
+        colorCustomVar(key, normalColor, increasedColor, decreasedColor, increasedColor);
+    }
+    protected final void colorCustomVar(String key, Color normalColor, Color increasedColor, Color decreasedColor, Color upgradedColor) {
+        LocalVarInfo var = getCustomVar(key);
+        if (var == null) {
+            throw new IllegalArgumentException("Attempted to set color of variable that hasn't been registered.");
+        }
+
+        var.normalColor = normalColor;
+        var.increasedColor = increasedColor;
+        var.decreasedColor = decreasedColor;
+        var.upgradedColor = upgradedColor;
+    }
+
 
     private LocalVarInfo getCustomVar(String key) {
         return cardVariables.get(key);
@@ -148,6 +282,9 @@ public abstract class BaseCard extends CustomCard {
 
     protected void calculateVarAsDamage(String key) {
         setVarCalculation(key, (m, base)->{
+            boolean wasMultiDamage = this.isMultiDamage;
+            this.isMultiDamage = false;
+
             int tmp = this.baseDamage;
 
             this.baseDamage = base;
@@ -157,6 +294,8 @@ public abstract class BaseCard extends CustomCard {
                 super.applyPowers();
 
             this.baseDamage = tmp;
+            this.isMultiDamage = wasMultiDamage;
+
             return damage;
         });
     }
@@ -185,10 +324,16 @@ public abstract class BaseCard extends CustomCard {
         return var.base;
     }
     public int customVar(String key) {
-        LocalVarInfo var = cardVariables.get(key);
+        LocalVarInfo var = cardVariables == null ? null : cardVariables.get(key); //Prevents crashing when used with dynamic text
         if (var == null)
             return -1;
         return var.value;
+    }
+    public int[] customVarMulti(String key) {
+        LocalVarInfo var = cardVariables.get(key);
+        if (var == null)
+            return null;
+        return var.aoeValue;
     }
     public boolean isCustomVarModified(String key) {
         LocalVarInfo var = cardVariables.get(key);
@@ -278,6 +423,7 @@ public abstract class BaseCard extends CustomCard {
                 }
                 target.base = current.base;
                 target.value = current.value;
+                target.aoeValue = current.aoeValue;
                 target.upgrade = current.upgrade;
                 target.calculation = current.calculation;
             }
@@ -360,6 +506,19 @@ public abstract class BaseCard extends CustomCard {
             for (LocalVarInfo var : cardVariables.values()) {
                 var.value = var.calculation.apply(null, var.base);
             }
+            if (isMultiDamage) {
+                ArrayList<AbstractMonster> monsters = AbstractDungeon.getCurrRoom().monsters.monsters;
+                AbstractMonster m;
+                for (LocalVarInfo var : cardVariables.values()) {
+                    if (var.aoeValue == null || var.aoeValue.length != monsters.size())
+                        var.aoeValue = new int[monsters.size()];
+
+                    for (int i = 0; i < monsters.size(); ++i) {
+                        m = monsters.get(i);
+                        var.aoeValue[i] = var.calculation.apply(m, var.base);
+                    }
+                }
+            }
             inCalc = false;
         }
 
@@ -373,14 +532,37 @@ public abstract class BaseCard extends CustomCard {
             for (LocalVarInfo var : cardVariables.values()) {
                 var.value = var.calculation.apply(m, var.base);
             }
+            if (isMultiDamage) {
+                ArrayList<AbstractMonster> monsters = AbstractDungeon.getCurrRoom().monsters.monsters;
+                for (LocalVarInfo var : cardVariables.values()) {
+                    if (var.aoeValue == null || var.aoeValue.length != monsters.size())
+                        var.aoeValue = new int[monsters.size()];
+
+                    for (int i = 0; i < monsters.size(); ++i) {
+                        m = monsters.get(i);
+                        var.aoeValue[i] = var.calculation.apply(m, var.base);
+                    }
+                }
+            }
             inCalc = false;
         }
 
         super.calculateCardDamage(m);
     }
 
+    @Override
+    public void resetAttributes() {
+        super.resetAttributes();
+
+        for (LocalVarInfo var : cardVariables.values()) {
+            var.value = var.base;
+        }
+    }
+
     private static class QuickDynamicVariable extends DynamicVariable {
         final String localKey, key;
+
+        private BaseCard current = null;
 
         public QuickDynamicVariable(String key) {
             this.localKey = key;
@@ -403,7 +585,7 @@ public abstract class BaseCard extends CustomCard {
 
         @Override
         public boolean isModified(AbstractCard c) {
-            return c instanceof BaseCard && ((BaseCard) c).isCustomVarModified(localKey);
+            return c instanceof BaseCard && (current = (BaseCard) c).isCustomVarModified(localKey);
         }
 
         @Override
@@ -420,13 +602,50 @@ public abstract class BaseCard extends CustomCard {
         public boolean upgraded(AbstractCard c) {
             return c instanceof BaseCard && ((BaseCard) c).customVarUpgraded(localKey);
         }
+
+        public Color getNormalColor() {
+            LocalVarInfo var;
+            if (current == null || (var = current.getCustomVar(localKey)) == null)
+                return Settings.CREAM_COLOR;
+
+            return var.normalColor;
+        }
+
+        public Color getUpgradedColor() {
+            LocalVarInfo var;
+            if (current == null || (var = current.getCustomVar(localKey)) == null)
+                return Settings.GREEN_TEXT_COLOR;
+
+            return var.upgradedColor;
+        }
+
+        public Color getIncreasedValueColor() {
+            LocalVarInfo var;
+            if (current == null || (var = current.getCustomVar(localKey)) == null)
+                return Settings.GREEN_TEXT_COLOR;
+
+            return var.increasedColor;
+        }
+
+        public Color getDecreasedValueColor() {
+            LocalVarInfo var;
+            if (current == null || (var = current.getCustomVar(localKey)) == null)
+                return Settings.RED_TEXT_COLOR;
+
+            return var.decreasedColor;
+        }
     }
 
 
-    private static class LocalVarInfo {
+    protected static class LocalVarInfo {
         int base, value, upgrade;
+        int[] aoeValue = null;
         boolean upgraded = false;
         boolean forceModified = false;
+        Color normalColor = Settings.CREAM_COLOR;
+        Color upgradedColor = Settings.GREEN_TEXT_COLOR;
+        Color increasedColor = Settings.GREEN_TEXT_COLOR;
+        Color decreasedColor = Settings.RED_TEXT_COLOR;
 
         BiFunction<AbstractMonster, Integer, Integer> calculation = LocalVarInfo::noCalc;
 
