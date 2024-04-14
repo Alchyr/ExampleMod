@@ -4,5 +4,12 @@
     "DESCRIPTIONS": [
       "You are Very Cool and Strong."
     ]
+  },
+  "${modID}:StupidPower": {
+    "NAME": "Test",
+    "DESCRIPTIONS": [
+      "A #b",
+      " B"
+    ]
   }
 }

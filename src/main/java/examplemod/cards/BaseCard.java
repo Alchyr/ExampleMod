@@ -10,7 +10,7 @@ import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.localization.CardStrings;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
-import examplemod.NotBasicMod;
+import examplemod.MyMod;
 import examplemod.util.CardStats;
 
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ import static examplemod.util.TextureLoader.getCardTextureString;
 public abstract class BaseCard extends CustomCard {
     final private static Map<String, DynamicVariable> customVars = new HashMap<>();
 
-    protected static String makeID(String name) { return NotBasicMod.makeID(name); }
+    protected static String makeID(String name) { return MyMod.makeID(name); }
     protected CardStrings cardStrings;
 
     protected boolean upgradesDescription;
@@ -232,6 +232,16 @@ public abstract class BaseCard extends CustomCard {
 
                     this.baseBlock = tmp;
                     return block;
+                });
+                break;
+            default:
+                setVarCalculation(key, (m, baseVal)->{
+                    int tmp = baseVal;
+
+                    tmp = preCalc.apply(m, tmp);
+                    tmp = postCalc.apply(m, tmp);
+
+                    return tmp;
                 });
                 break;
         }
@@ -443,7 +453,7 @@ public abstract class BaseCard extends CustomCard {
             {
                 if (cardStrings.UPGRADE_DESCRIPTION == null)
                 {
-                    NotBasicMod.logger.error("Card " + cardID + " upgrades description and has null upgrade description.");
+                    MyMod.logger.error("Card " + cardID + " upgrades description and has null upgrade description.");
                 }
                 else
                 {

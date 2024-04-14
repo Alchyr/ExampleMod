@@ -7,6 +7,10 @@
     "NAME": "Many Variables",
     "DESCRIPTION": "Deal !D! damage. NL Deal !${modID}:D2! damage. NL Deal !${modID}:D3! damage. NL Gain !B! Block. NL Gain !${modID}:B2! Block."
   },
+  "${modID}:StupidCard": {
+    "NAME": "Math",
+    "DESCRIPTION": "Craft - !${modID}:craft!. NL Deal (!D! - !${modID}:D2!) x !${modID}:D3! damage."
+  },
   "${modID}:ExampleCard": {
     "NAME": "Why Byrd",
     "DESCRIPTION": "Deal !D! damage. NL Enemy loses !${modID}:beep! HP. Byrds lose twice as much."

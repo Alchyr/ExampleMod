@@ -7,7 +7,7 @@ import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.helpers.CardHelper;
 import examplemod.potions.BasePotion;
 
-import static examplemod.NotBasicMod.makeID;
+import static examplemod.MyMod.makeID;
 
 public class YummyPotion extends BasePotion {
     public static final String ID = makeID(YummyPotion.class.getSimpleName());

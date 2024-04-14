@@ -4,6 +4,7 @@ import basemod.AutoAdd;
 import basemod.BaseMod;
 import basemod.interfaces.*;
 import examplemod.cards.BaseCard;
+import examplemod.character.MyCharacter;
 import examplemod.potions.BasePotion;
 import examplemod.util.GeneralUtils;
 import examplemod.util.KeywordInfo;
@@ -28,10 +29,11 @@ import java.util.Optional;
 import java.util.Set;
 
 @SpireInitializer
-public class NotBasicMod implements
+public class MyMod implements
         EditCardsSubscriber,
         EditStringsSubscriber,
         EditKeywordsSubscriber,
+        EditCharactersSubscriber,
         PostInitializeSubscriber {
     public static ModInfo info;
     public static String modID;
@@ -47,10 +49,12 @@ public class NotBasicMod implements
 
     //This will be called by ModTheSpire because of the @SpireInitializer annotation at the top of the class.
     public static void initialize() {
-        new NotBasicMod();
+        new MyMod();
+
+        MyCharacter.Meta.registerColor();
     }
 
-    public NotBasicMod() {
+    public MyMod() {
         BaseMod.subscribe(this); //This will make BaseMod trigger all the subscribers at their appropriate times.
         logger.info(modID + " subscribed to BaseMod.");
     }
@@ -64,6 +68,13 @@ public class NotBasicMod implements
         //Set up the mod information displayed in the in-game mods menu.
         //The information used is taken from your pom.xml file.
         BaseMod.registerModBadge(badgeTexture, info.Name, GeneralUtils.arrToString(info.Authors), info.Description, null);
+    }
+
+    private static final String CHAR_SELECT_BUTTON = characterPath("select/button.png");
+    private static final String CHAR_SELECT_PORTRAIT = characterPath("select/portrait.png");
+    @Override
+    public void receiveEditCharacters() {
+        MyCharacter.Meta.registerCharacter();
     }
 
     @Override
@@ -186,7 +197,7 @@ public class NotBasicMod implements
             if (annotationDB == null)
                 return false;
             Set<String> initializers = annotationDB.getAnnotationIndex().getOrDefault(SpireInitializer.class.getName(), Collections.emptySet());
-            return initializers.contains(NotBasicMod.class.getName());
+            return initializers.contains(MyMod.class.getName());
         }).findFirst();
         if (infos.isPresent()) {
             info = infos.get();
