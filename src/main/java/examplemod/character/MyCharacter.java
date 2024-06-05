@@ -25,6 +25,9 @@ import com.megacrit.cardcrawl.screens.CharSelectInfo;
 
 import java.util.ArrayList;
 
+import static examplemod.MyMod.characterPath;
+import static examplemod.MyMod.makeID;
+
 
 public class MyCharacter extends CustomPlayer {
     //Stats
