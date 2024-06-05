@@ -1,4 +1,8 @@
 {
+  "${modID}:Strike": {
+    "NAME": "Strike",
+    "DESCRIPTION": "Deal !D! damage."
+  },
   "${modID}:InfiniteUpgradeAttack": {
     "NAME": "Not Searing Blow",
     "DESCRIPTION": "Deal !D! damage. NL _ _ _ NL !${modID}:Keyword! NL ${modID}:Multiword_Keywords NL Deal !D! damage X+!M! times."
@@ -7,7 +11,7 @@
     "NAME": "Many Variables",
     "DESCRIPTION": "Deal !D! damage. NL Deal !${modID}:D2! damage. NL Deal !${modID}:D3! damage. NL Gain !B! Block. NL Gain !${modID}:B2! Block."
   },
-  "${modID}:StupidCard": {
+  "${modID}:OvercomplicatedCard": {
     "NAME": "Math",
     "DESCRIPTION": "Craft - !${modID}:craft!. NL Deal (!D! - !${modID}:D2!) x !${modID}:D3! damage."
   },
