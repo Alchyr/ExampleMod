@@ -26,8 +26,6 @@ public class InfiniteUpgradeAttack extends BaseCard {
 
         setDamage(DAMAGE);
         setMagic(3);
-
-        CardModifierManager.addModifier(this, new BaseDamageCardmod(10));
     }
 
     public boolean canUpgrade() {
